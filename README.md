@@ -167,7 +167,7 @@ Performance evaluated on the held-out test set (20% of data, most recent period:
 | XGBoost           | 33.5177  | 24.1689  | -0.5203    | 494          |
 | LSTM              | 35.9844  | 28.0683  | -0.9992    | 464          |
 
-### Best Model: Linear Regression ⭐
+### Best Model: Linear Regression ⭐ 
 
 | Metric                  | Value       |
 |-------------------------|-------------|
