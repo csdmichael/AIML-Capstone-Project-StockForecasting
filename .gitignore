@@ -1,10 +1,10 @@
-# Data
-data/*.csv
+# Data — tracked in version control for reproducibility
+# data/*.csv
 
-# Models
-models/*.pkl
-models/*.h5
-models/*.keras
+# Models — tracked in version control for reproducibility
+# models/*.pkl
+# models/*.h5
+# models/*.keras
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
