@@ -16,8 +16,9 @@
 8. [Evaluation Visualizations](#evaluation-visualizations)
 9. [Feature Importance](#feature-importance)
 10. [Recommendations & Next Steps](#recommendations--next-steps)
-11. [Repository Structure](#repository-structure)
-12. [Getting Started](#getting-started)
+11. [Jupyter Notebooks](#jupyter-notebooks)
+12. [Repository Structure](#repository-structure)
+13. [Getting Started](#getting-started)
 
 ---
 
@@ -62,9 +63,11 @@ This project follows the **CRISP-DM** methodology, the industry-standard framewo
 
 - Trained four diverse algorithms spanning parametric, ensemble, and deep learning categories:
   - **Linear Regression** — Simple baseline assuming linear feature-target relationships
-  - **Random Forest** (n_estimators=200, max_depth=15) — Ensemble bagging for non-linear patterns
-  - **XGBoost** (n_estimators=300, learning_rate=0.05, L1/L2 regularization) — Gradient boosting with sequential error correction
+  - **Random Forest** — Ensemble bagging for non-linear patterns (hyperparameters tuned via Grid Search)
+  - **XGBoost** — Gradient boosting with L1/L2 regularization (hyperparameters tuned via Grid Search)
   - **LSTM** (2 layers: 64→32 units, dropout=0.2, 30-day sequences) — Deep learning for temporal dependencies
+- Applied **TimeSeriesSplit cross-validation** (5 folds) to validate all models on time-ordered data.
+- Used **GridSearchCV** for Random Forest and XGBoost to systematically find optimal hyperparameters.
 - Saved all trained models and generated predictions on the test set.
 
 ### Phase 5: Evaluation
@@ -139,9 +142,9 @@ Each record includes: Open, High, Low, Close, Adjusted Close, and Volume.
 
 | Model              | Type                  | Key Hyperparameters                                           |
 |--------------------|----------------------|---------------------------------------------------------------|
-| Linear Regression  | Parametric Regression | Default (simple baseline)                                     |
-| Random Forest      | Ensemble (Bagging)   | n_estimators=200, max_depth=15, min_samples_split=5           |
-| XGBoost            | Ensemble (Boosting)  | n_estimators=300, learning_rate=0.05, max_depth=6, L1/L2 reg  |
+| Linear Regression  | Parametric Regression | Default (simple baseline); cross-validated with TimeSeriesSplit |
+| Random Forest      | Ensemble (Bagging)   | **Tuned via GridSearchCV** — n_estimators, max_depth, min_samples_split |
+| XGBoost            | Ensemble (Boosting)  | **Tuned via GridSearchCV** — n_estimators, learning_rate, max_depth; L1/L2 reg |
 | LSTM               | Deep Learning (RNN)  | 2 layers (64→32), dropout=0.2, 30-day sequences, early stopping |
 
 ---
@@ -278,6 +281,19 @@ The top 10 most predictive features (averaged across Random Forest and XGBoost i
 5. **Monitor for Data Drift** — Track model performance over time and retrain periodically as market regimes change.
 6. **Explore Transformer Architectures** — Recent advances in transformer-based models (e.g., Temporal Fusion Transformers) show promise for time-series forecasting.
 7. **Investigate Tree-Based Model Failures** — The poor generalization of Random Forest and XGBoost warrants further investigation, potentially with walk-forward retraining or different feature sets.
+
+---
+
+## Jupyter Notebooks
+
+The full analysis is split across four notebooks, designed to be run in order:
+
+| # | Notebook | Description |
+|---|----------|-------------|
+| 1 | [01_Data_Acquisition.ipynb](notebooks/01_Data_Acquisition.ipynb) | Downloads 10 years of stock data from Yahoo Finance and performs exploratory data analysis |
+| 2 | [02_Data_Preprocessing.ipynb](notebooks/02_Data_Preprocessing.ipynb) | Cleans data, engineers 25 technical indicator features, and prepares train/test splits |
+| 3 | [03_Modeling.ipynb](notebooks/03_Modeling.ipynb) | Trains 4 models (Linear Regression, Random Forest, XGBoost, LSTM) with cross-validation and hyperparameter tuning via Grid Search |
+| 4 | [04_Model_Evaluation.ipynb](notebooks/04_Model_Evaluation.ipynb) | Compares models, performs residual analysis, selects the best model, and presents findings and recommendations |
 
 ---
 
