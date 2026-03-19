@@ -153,7 +153,7 @@ Each record includes: Open, High, Low, Close, Adjusted Close, and Volume.
 
 1. **Linear Regression is the clear winner** — Achieving R² = 0.9909 with RMSE of only $2.60, it dramatically outperforms all other models on this dataset.
 2. **Tree-based models (Random Forest, XGBoost) significantly underperform** with negative R² scores, indicating they fail to generalize beyond the training distribution for this time-series task.
-3. **LSTM does not provide an advantage** — Despite being designed for sequential data, it performs worst among all models (R² = -0.999), likely because lag features already encode the temporal information LSTM tries to learn.
+3. **LSTM does not provide an advantage** — Despite being designed for sequential data, it performs worst among all models (R² = -1.077), likely because lag features already encode the temporal information LSTM tries to learn.
 4. **Lag features and moving averages are the most influential predictors** — SMA_10, Close_Lag1, and BB_Lower rank as the top features, confirming that recent price history carries strong predictive signal.
 5. **Simplicity wins for stock forecasting** — The strong linear relationship between recent technical indicators and next-day price favors a straightforward linear model over complex non-linear approaches.
 
@@ -166,9 +166,9 @@ Performance evaluated on the held-out test set (20% of data, most recent period:
 | Model             | RMSE     | MAE      | R² Score   | Test Samples |
 |-------------------|----------|----------|------------|--------------|
 | **Linear Regression** | **2.5966**  | **1.9166**  | **0.9909**    | 494          |
-| Random Forest     | 30.1438  | 20.4727  | -0.2296    | 494          |
-| XGBoost           | 33.5177  | 24.1689  | -0.5203    | 494          |
-| LSTM              | 35.9844  | 28.0683  | -0.9992    | 464          |
+| Random Forest     | 30.1611  | 20.4686  | -0.2310    | 494          |
+| XGBoost           | 33.9103  | 24.3995  | -0.5561    | 494          |
+| LSTM              | 36.6768  | 28.4500  | -1.0769    | 464          |
 
 ### Best Model: Linear Regression ⭐ 
 
@@ -229,16 +229,16 @@ Horizontal bar chart comparing feature importance across tree-based models:
 
 | Rank | Feature     | Avg. Importance |
 |------|-------------|-----------------|
-| 1    | SMA_10      | 0.1684          |
-| 2    | Close_Lag1  | 0.1115          |
-| 3    | BB_Lower    | 0.1035          |
-| 4    | Close_Lag3  | 0.1000          |
-| 5    | High        | 0.0972          |
-| 6    | EMA_20      | 0.0623          |
-| 7    | Low         | 0.0619          |
-| 8    | SMA_50      | 0.0615          |
-| 9    | SMA_20      | 0.0533          |
-| 10   | Close       | 0.0517          |
+| 1    | SMA_10      | 0.1624          |
+| 2    | Close_Lag1  | 0.1248          |
+| 3    | BB_Lower    | 0.1084          |
+| 4    | Close_Lag3  | 0.0958          |
+| 5    | High        | 0.0945          |
+| 6    | EMA_20      | 0.0666          |
+| 7    | SMA_20      | 0.0592          |
+| 8    | SMA_50      | 0.0585          |
+| 9    | EMA_10      | 0.0535          |
+| 10   | Close       | 0.0510          |
 
 ![Feature Importance](notebooks/images/feature_importance.png)
 
@@ -257,16 +257,16 @@ Horizontal bar chart comparing feature importance across tree-based models:
 
 The top 10 most predictive features (averaged across Random Forest and XGBoost importance scores):
 
-1. **SMA_10** (10-day Simple Moving Average) — 0.1684
-2. **Close_Lag1** (Previous day close) — 0.1115
-3. **BB_Lower** (Bollinger Band lower bound) — 0.1035
-4. **Close_Lag3** (3-day lagged close) — 0.1000
-5. **High** (Daily high price) — 0.0972
-6. **EMA_20** (20-day Exponential Moving Average) — 0.0623
-7. **Low** (Daily low price) — 0.0619
-8. **SMA_50** (50-day Simple Moving Average) — 0.0615
-9. **SMA_20** (20-day Simple Moving Average) — 0.0533
-10. **Close** (Closing price) — 0.0517
+1. **SMA_10** (10-day Simple Moving Average) — 0.1624
+2. **Close_Lag1** (Previous day close) — 0.1248
+3. **BB_Lower** (Bollinger Band lower bound) — 0.1084
+4. **Close_Lag3** (3-day lagged close) — 0.0958
+5. **High** (Daily high price) — 0.0945
+6. **EMA_20** (20-day Exponential Moving Average) — 0.0666
+7. **SMA_20** (20-day Simple Moving Average) — 0.0592
+8. **SMA_50** (50-day Simple Moving Average) — 0.0585
+9. **EMA_10** (10-day Exponential Moving Average) — 0.0535
+10. **Close** (Closing price) — 0.0510
 
 **Key Insight:** Moving averages and lag features dominate, confirming that recent price history is the strongest predictor of next-day price. The 10-day SMA is the single most important feature, suggesting that the short-term trend direction is highly predictive.
 
