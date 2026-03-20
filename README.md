@@ -26,7 +26,7 @@
 
 This project develops a machine learning system to forecast stock closing prices using historical market data. Accurate stock price prediction is a valuable yet challenging task in the financial industry. By applying multiple regression-based machine learning models to historical stock data enriched with technical indicators, this project evaluates which algorithms are best suited for short-term stock price forecasting.
 
-The analysis covers the full data science lifecycle following the **CRISP-DM (Cross-Industry Standard Process for Data Mining)** framework: business understanding, data understanding, data preparation, modeling, evaluation, and deployment considerations. Four distinct models — Linear Regression, Random Forest, XGBoost, and LSTM (Long Short-Term Memory) neural network — are trained and compared to identify the most effective approach.
+The analysis covers the full data science lifecycle following the **CRISP-DM (Cross-Industry Standard Process for Data Mining)** framework: business understanding, data understanding, data preparation, modeling, evaluation, and deployment considerations. Five distinct models — Linear Regression, Polynomial Regression, Random Forest, XGBoost, and LSTM (Long Short-Term Memory) neural network — are trained and compared to identify the most effective approach. **scikit-learn Pipelines** are used for Linear and Polynomial Regression to bundle preprocessing with modeling and prevent data leakage during cross-validation.
 
 ---
 
@@ -61,21 +61,25 @@ This project follows the **CRISP-DM** methodology, the industry-standard framewo
 ### Phase 4: Modeling
 > **Notebook:** `03_Modeling.ipynb`
 
-- Trained four diverse algorithms spanning parametric, ensemble, and deep learning categories:
-  - **Linear Regression** — Simple baseline assuming linear feature-target relationships
+- Trained five diverse algorithms spanning parametric, ensemble, and deep learning categories:
+  - **Linear Regression** — Simple baseline wrapped in a **Pipeline** (`StandardScaler → LinearRegression`)
+  - **Polynomial Regression** — Extends linear model with polynomial feature interactions, using a **Pipeline** (`StandardScaler → PolynomialFeatures → LinearRegression`). Degrees 2 and 3 were evaluated; degree 2 selected by cross-validation.
   - **Random Forest** — Ensemble bagging for non-linear patterns (hyperparameters tuned via Grid Search)
   - **XGBoost** — Gradient boosting with L1/L2 regularization (hyperparameters tuned via Grid Search)
   - **LSTM** (2 layers: 64→32 units, dropout=0.2, 30-day sequences) — Deep learning for temporal dependencies
 - Applied **TimeSeriesSplit cross-validation** (5 folds) to validate all models on time-ordered data.
+- Used **scikit-learn Pipelines** for Linear and Polynomial Regression to prevent data leakage during cross-validation.
 - Used **GridSearchCV** for Random Forest and XGBoost to systematically find optimal hyperparameters.
-- Saved all trained models and generated predictions on the test set.
+- Performed **polynomial degree evaluation** (degrees 2 and 3) to assess non-linear feature interactions.
+- Saved all trained models/pipelines and generated predictions on the test set.
 
 ### Phase 5: Evaluation
 > **Notebook:** `04_Model_Evaluation.ipynb`
 
-- Compared all models using RMSE, MAE, and R² on the held-out test set.
+- Compared all five models using RMSE, MAE, and R² on the held-out test set.
 - Performed residual analysis, error distribution analysis, and predicted-vs-actual scatter plots.
-- **Linear Regression emerged as the best model** with R² = 0.9909, dramatically outperforming tree-based and deep learning alternatives.
+- **Linear Regression emerged as the best model** with R² = 0.9909, outperforming Polynomial Regression (R² = 0.9720), tree-based, and deep learning alternatives.
+- Polynomial Regression (degree 2) ranked second with R² = 0.972, confirming linear features are sufficient.
 - Conducted feature importance analysis across Random Forest and XGBoost.
 
 ### Phase 6: Deployment (Recommendations)
@@ -83,7 +87,7 @@ This project follows the **CRISP-DM** methodology, the industry-standard framewo
 
 - Documented deployment considerations: daily error monitoring, monthly retraining, walk-forward validation.
 - Recommended enhancements: sentiment analysis integration, macroeconomic indicators, transformer architectures.
-- The selected Linear Regression model is lightweight, interpretable, and suitable for production deployment.
+- The selected Linear Regression Pipeline is lightweight, interpretable, and suitable for production deployment. The Pipeline bundles StandardScaler with the model, simplifying inference to a single `pipeline.predict(X)` call.
 
 ---
 
@@ -140,22 +144,25 @@ Each record includes: Open, High, Low, Close, Adjusted Close, and Volume.
 
 ### Models Evaluated
 
-| Model              | Type                  | Key Hyperparameters                                           |
-|--------------------|----------------------|---------------------------------------------------------------|
-| Linear Regression  | Parametric Regression | Default (simple baseline); cross-validated with TimeSeriesSplit |
-| Random Forest      | Ensemble (Bagging)   | **Tuned via GridSearchCV** — n_estimators, max_depth, min_samples_split |
-| XGBoost            | Ensemble (Boosting)  | **Tuned via GridSearchCV** — n_estimators, learning_rate, max_depth; L1/L2 reg |
-| LSTM               | Deep Learning (RNN)  | 2 layers (64→32), dropout=0.2, 30-day sequences, early stopping |
+| Model              | Type                  | Key Hyperparameters | Pipeline |
+|--------------------|----------------------|---------------------------------------------------------------|----------|
+| Linear Regression  | Parametric Regression | Default (simple baseline); cross-validated with TimeSeriesSplit | `StandardScaler → LinearRegression` |
+| Polynomial Regression | Parametric (Non-linear) | Degree evaluation (2 and 3); best degree selected by CV RMSE | `StandardScaler → PolynomialFeatures → LinearRegression` |
+| Random Forest      | Ensemble (Bagging)   | **Tuned via GridSearchCV** — n_estimators, max_depth, min_samples_split | — |
+| XGBoost            | Ensemble (Boosting)  | **Tuned via GridSearchCV** — n_estimators, learning_rate, max_depth; L1/L2 reg | — |
+| LSTM               | Deep Learning (RNN)  | 2 layers (64→32), dropout=0.2, 30-day sequences, early stopping | — |
 
 ---
 
 ## Key Findings
 
 1. **Linear Regression is the clear winner** — Achieving R² = 0.9909 with RMSE of only $2.60, it dramatically outperforms all other models on this dataset.
-2. **Tree-based models (Random Forest, XGBoost) significantly underperform** with negative R² scores, indicating they fail to generalize beyond the training distribution for this time-series task.
-3. **LSTM does not provide an advantage** — Despite being designed for sequential data, it performs worst among all models (R² = -1.077), likely because lag features already encode the temporal information LSTM tries to learn.
-4. **Lag features and moving averages are the most influential predictors** — SMA_10, Close_Lag1, and BB_Lower rank as the top features, confirming that recent price history carries strong predictive signal.
-5. **Simplicity wins for stock forecasting** — The strong linear relationship between recent technical indicators and next-day price favors a straightforward linear model over complex non-linear approaches.
+2. **Polynomial Regression (degree 2) is the second-best model** — With R² = 0.9720 and RMSE of $4.55, it adds non-linear feature interactions but does not improve over the simpler linear baseline. Degree 3 severely overfits (R² = −1015), confirming that higher polynomial complexity is detrimental.
+3. **Tree-based models (Random Forest, XGBoost) significantly underperform** with negative R² scores, indicating they fail to generalize beyond the training distribution for this time-series task.
+4. **LSTM does not provide an advantage** — Despite being designed for sequential data, it performs worst among all models (R² = −1.779), likely because lag features already encode the temporal information LSTM tries to learn.
+5. **Lag features and moving averages are the most influential predictors** — SMA_10, Close_Lag1, and BB_Lower rank as the top features, confirming that recent price history carries strong predictive signal.
+6. **Simplicity wins for stock forecasting** — The strong linear relationship between recent technical indicators and next-day price favors a straightforward linear model over complex non-linear approaches.
+7. **Pipelines prevent data leakage** — Using scikit-learn Pipelines for Linear and Polynomial Regression ensures that scaling is applied correctly during cross-validation (fit on training fold only).
 
 ---
 
@@ -163,12 +170,13 @@ Each record includes: Open, High, Low, Close, Adjusted Close, and Volume.
 
 Performance evaluated on the held-out test set (20% of data, most recent period: Jan 2023 – Dec 2024):
 
-| Model             | RMSE     | MAE      | R² Score   | Test Samples |
-|-------------------|----------|----------|------------|--------------|
-| **Linear Regression** | **2.5966**  | **1.9166**  | **0.9909**    | 494          |
-| Random Forest     | 30.1611  | 20.4686  | -0.2310    | 494          |
-| XGBoost           | 33.9103  | 24.3995  | -0.5561    | 494          |
-| LSTM              | 36.6768  | 28.4500  | -1.0769    | 464          |
+| Model             | RMSE     | MAE      | R² Score   | Test Samples | Pipeline |
+|-------------------|----------|----------|------------|--------------|----------|
+| **Linear Regression** | **2.5966**  | **1.9166**  | **0.9909**    | 494          | Yes |
+| Polynomial Regression (deg=2) | 4.5486 | 3.3303 | 0.9720 | 494 | Yes |
+| Random Forest     | 30.1611  | 20.4686  | -0.2310    | 494          | No |
+| XGBoost           | 33.9103  | 24.3995  | -0.5561    | 494          | No |
+| LSTM              | 42.4220  | 34.5321  | -1.7785    | 464          | No |
 
 ### Best Model: Linear Regression ⭐ 
 
@@ -195,31 +203,31 @@ The following visualizations were generated during model evaluation (Notebook 04
 
 ### Model Performance Comparison
 
-Bar chart comparing RMSE, MAE, and R² across all four models. Linear Regression dominates with the lowest error metrics and highest R² score by a wide margin.
+Bar chart comparing RMSE, MAE, and R² across all five models. Linear Regression dominates with the lowest error metrics and highest R² score, followed by Polynomial Regression (degree 2).
 
 ![Model Performance Comparison](notebooks/images/model_performance_comparison.png)
 
 ### Predictions vs. Actual Prices (Time Series)
 
-Interactive time-series overlay showing actual AAPL closing prices against each model's predictions over the test period (Jan 2023 – Dec 2024). Linear Regression tracks the actual price closely, while other models show systematic underprediction at higher price levels.
+Interactive time-series overlay showing actual AAPL closing prices against each model's predictions over the test period (Jan 2023 – Dec 2024). Linear Regression tracks the actual price most closely, Polynomial Regression (deg=2) follows well but with slightly more error, while tree-based and LSTM models show systematic underprediction at higher price levels.
 
 ![Predictions vs Actual](notebooks/images/predictions_vs_actual.png)
 
 ### Predicted vs. Actual Scatter Plots
 
-Scatter plots with perfect-prediction reference lines for each model. Linear Regression points cluster tightly along the diagonal (R² = 0.991), while Random Forest, XGBoost, and LSTM show flattening — predicting values within a narrow range regardless of actual price.
+Scatter plots with perfect-prediction reference lines for each model. Linear Regression points cluster tightly along the diagonal (R² = 0.991), Polynomial Regression (deg=2) shows good alignment (R² = 0.972) with slightly more scatter, while Random Forest, XGBoost, and LSTM show flattening — predicting values within a narrow range regardless of actual price.
 
 ![Predicted vs Actual Scatter](notebooks/images/predicted_vs_actual_scatter.png)
 
 ### Residual Analysis
 
-Residual plots for all four models. Linear Regression residuals are centered around zero with no systematic pattern, confirming unbiased predictions. Tree-based and LSTM models show severe positive bias (systematic underprediction).
+Residual plots for all five models. Linear Regression residuals are centered around zero with no systematic pattern, confirming unbiased predictions. Polynomial Regression (deg=2) residuals are also near-centered (mean = 1.28) but with slightly more spread. Tree-based and LSTM models show severe positive bias (systematic underprediction).
 
 ![Residual Analysis](notebooks/images/residual_analysis.png)
 
 ### Residual Distributions
 
-Histogram of residuals for each model. Linear Regression shows a near-normal distribution centered at zero (mean = 0.116). Other models show heavily right-skewed distributions with means of 20–28, indicating large systematic errors.
+Histogram of residuals for each model. Linear Regression shows a near-normal distribution centered at zero (mean = 0.116). Polynomial Regression (deg=2) also shows a near-normal distribution (mean = 1.281). Tree-based and LSTM models show heavily right-skewed distributions with means of 20–34, indicating large systematic errors.
 
 ![Residual Distributions](notebooks/images/residual_distributions.png)
 
@@ -247,9 +255,10 @@ Horizontal bar chart comparing feature importance across tree-based models:
 | Model             | RMSE Rank | MAE Rank | R² Rank | Average Rank |
 |-------------------|-----------|----------|---------|--------------|
 | Linear Regression | 1         | 1        | 1       | **1.0**      |
-| Random Forest     | 2         | 2        | 2       | 2.0          |
-| XGBoost           | 3         | 3        | 3       | 3.0          |
-| LSTM              | 4         | 4        | 4       | 4.0          |
+| Polynomial Regression (deg=2) | 2 | 2 | 2 | 2.0 |
+| Random Forest     | 3         | 3        | 3       | 3.0          |
+| XGBoost           | 4         | 4        | 4       | 4.0          |
+| LSTM              | 5         | 5        | 5       | 5.0          |
 
 ---
 
@@ -292,8 +301,8 @@ The full analysis is split across four notebooks, designed to be run in order:
 |---|----------|-------------|
 | 1 | [01_Data_Acquisition.ipynb](notebooks/01_Data_Acquisition.ipynb) | Downloads 10 years of stock data from Yahoo Finance and performs exploratory data analysis |
 | 2 | [02_Data_Preprocessing.ipynb](notebooks/02_Data_Preprocessing.ipynb) | Cleans data, engineers 25 technical indicator features, and prepares train/test splits |
-| 3 | [03_Modeling.ipynb](notebooks/03_Modeling.ipynb) | Trains 4 models (Linear Regression, Random Forest, XGBoost, LSTM) with cross-validation and hyperparameter tuning via Grid Search |
-| 4 | [04_Model_Evaluation.ipynb](notebooks/04_Model_Evaluation.ipynb) | Compares models, performs residual analysis, selects the best model, and presents findings and recommendations |
+| 3 | [03_Modeling.ipynb](notebooks/03_Modeling.ipynb) | Trains 5 models (Linear Regression, Polynomial Regression, Random Forest, XGBoost, LSTM) with Pipelines, polynomial degree evaluation, cross-validation, and hyperparameter tuning via Grid Search |
+| 4 | [04_Model_Evaluation.ipynb](notebooks/04_Model_Evaluation.ipynb) | Compares all 5 models, performs residual analysis, selects the best model, and presents findings and recommendations |
 
 ---
 
@@ -319,7 +328,9 @@ AIML-Capstone-Project/
 │   ├── all_predictions.csv            # Model predictions on test set
 │   └── model_results.csv              # Summary of model performance metrics
 ├── models/                            # Saved model artifacts
-│   ├── linear_regression.pkl          # Trained Linear Regression model
+│   ├── linear_regression_pipeline.pkl # Linear Regression Pipeline (StandardScaler + model)
+│   ├── poly_degree_2_pipeline.pkl     # Polynomial Regression Pipeline (degree 2)
+│   ├── poly_degree_3_pipeline.pkl     # Polynomial Regression Pipeline (degree 3)
 │   ├── random_forest.pkl              # Trained Random Forest model
 │   ├── xgboost.pkl                    # Trained XGBoost model
 │   ├── lstm_model.keras               # Trained LSTM model
@@ -373,7 +384,7 @@ jupyter notebook notebooks/
 - **pandas** — Data manipulation
 - **NumPy** — Numerical computing
 - **yfinance** — Stock data acquisition
-- **scikit-learn** — Machine learning models and evaluation
+- **scikit-learn** — Machine learning models, Pipelines, PolynomialFeatures, and evaluation
 - **XGBoost** — Gradient boosting
 - **TensorFlow / Keras** — LSTM neural network
 - **Matplotlib / Seaborn / Plotly** — Visualization
